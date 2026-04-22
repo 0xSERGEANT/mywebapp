@@ -7,3 +7,9 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
+axum = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls", "chrono"] }
+tokio = { version = "1.0", features = ["full"] }
