@@ -1,0 +1,5 @@
+database:
+  host: "127.0.0.1"
+  user: "mywebapp_user"
+  password: "mywebapp_password"
+  database: "mywebapp_database"
