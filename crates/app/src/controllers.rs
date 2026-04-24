@@ -41,8 +41,12 @@ fn prefers_html(headers: &HeaderMap) -> bool {
         .unwrap_or(false)
 }
 
-pub async fn root() -> Html<String> {
-    Html(views::root_page())
+pub async fn root(headers: HeaderMap) -> impl IntoResponse {
+    if !prefers_html(&headers) {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
+    }
+    
+    Html(views::root_page()).into_response()
 }
 
 pub async fn health_alive() -> impl IntoResponse {
