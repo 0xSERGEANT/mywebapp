@@ -216,7 +216,7 @@ info "sudo rules installed for operator"
  
 step "Configuring Nginx"
  
-cat > /etc/nginx/sites-available/mywebapp <<'EOF'
+cat > /etc/nginx/sites-available/mywebapp <<'NGINXEOF'
 server {
     listen 80 default_server;
     server_name _;
@@ -224,25 +224,27 @@ server {
     access_log /var/log/nginx/mywebapp.access.log combined;
     error_log  /var/log/nginx/mywebapp.error.log warn;
  
+    proxy_set_header Host            $host;
+    proxy_set_header X-Real-IP       $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+ 
     location = / {
-        proxy_pass       http://127.0.0.1:5200;
-        proxy_set_header Host            $host;
-        proxy_set_header X-Real-IP       $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://127.0.0.1:5200;
     }
  
-    location /items {
-        proxy_pass       http://127.0.0.1:5200;
-        proxy_set_header Host            $host;
-        proxy_set_header X-Real-IP       $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    location ~ ^/items/?$ {
+        proxy_pass http://127.0.0.1:5200;
+    }
+ 
+    location ~ ^/items/[0-9]+$ {
+        proxy_pass http://127.0.0.1:5200;
     }
  
     location / {
         return 404;
     }
 }
-EOF
+NGINXEOF
  
 rm -f /etc/nginx/sites-enabled/default
 ln -sf /etc/nginx/sites-available/mywebapp /etc/nginx/sites-enabled/mywebapp
