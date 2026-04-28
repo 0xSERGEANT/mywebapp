@@ -89,6 +89,9 @@ echo "operator:12345678" | chpasswd
 chage -d 0 operator
  
 create_user "$APP_USER" true
+
+sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+systemctl restart sshd
  
 step "Setting up PostgreSQL"
  
