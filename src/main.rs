@@ -56,6 +56,21 @@ fn build_db_url(db: &DatabaseConfig) -> String {
     )
 }
 
+#[cfg(unix)]
+fn systemd_listener() -> Option<std::net::TcpListener> {
+    use std::os::unix::io::FromRawFd;
+    let fds: i32 = std::env::var("LISTEN_FDS").ok()?.parse().ok()?;
+    if fds < 1 {
+        return None;
+    }
+    Some(unsafe { std::net::TcpListener::from_raw_fd(3) })
+}
+
+#[cfg(not(unix))]
+fn systemd_listener() -> Option<std::net::TcpListener> {
+    None
+}
+
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
@@ -98,13 +113,27 @@ async fn main() {
         .route("/health/ready", get(controllers::health_ready))
         .with_state(pool);
 
-    let addr = format!("{}:{}", config.server.host, config.server.port);
-    let listener = tokio::net::TcpListener::bind(&addr)
-        .await
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to bind to {}: {}", addr, e);
-            std::process::exit(1);
-        });
+    let listener = match systemd_listener() {
+        Some(std_listener) => {
+            if let Err(e) = std_listener.set_nonblocking(true) {
+                eprintln!("Failed to set systemd socket to non-blocking: {}", e);
+                std::process::exit(1);
+            }
+            tokio::net::TcpListener::from_std(std_listener).unwrap_or_else(|e| {
+                eprintln!("Failed to bind systemd socket: {}", e);
+                std::process::exit(1);
+            })
+        }
+        None => {
+            let server_addr = format!("{}:{}", config.server.host, config.server.port);
+            tokio::net::TcpListener::bind(&server_addr)
+                .await
+                .unwrap_or_else(|e| {
+                    eprintln!("Failed to bind to {}: {}", server_addr, e);
+                    std::process::exit(1);
+                })
+        }
+    };
 
     if let Err(e) = axum::serve(listener, app).await {
         eprintln!("Server error: {}", e);
