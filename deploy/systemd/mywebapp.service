@@ -1,0 +1,32 @@
+[Unit]
+Description=mywebapp — Simple Inventory Web Service
+Documentation=https://github.com/0xSERGEANT/mywebapp
+After=network.target postgresql.service
+Requires=mywebapp.socket
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=app
+Group=app
+
+ExecStartPre=/opt/mywebapp/scripts/wait_for_pg.sh
+ExecStartPre=/opt/mywebapp/scripts/migrate.sh
+ExecStart=/opt/mywebapp/mywebapp
+
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=10s
+
+Environment="MYWEBAPP_CONFIG=/etc/mywebapp/config.yml"
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/etc/mywebapp
+PrivateTmp=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
