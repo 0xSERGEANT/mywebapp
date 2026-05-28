@@ -1,10 +1,25 @@
 use axum::{
     extract::State,
-    http::StatusCode,
-    response::{IntoResponse, Response},
+    http::{HeaderMap, StatusCode, header::ACCEPT},
+    response::{Html, IntoResponse, Response},
 };
 
-use super::repository;
+use super::{repository, views};
+
+fn prefers_html(headers: &HeaderMap) -> bool {
+    headers
+        .get(ACCEPT)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.contains("text/html"))
+        .unwrap_or(false)
+}
+
+pub async fn root(headers: HeaderMap) -> impl IntoResponse {
+    if !prefers_html(&headers) {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
+    }
+    Html(views::root_page()).into_response()
+}
 
 pub async fn health_alive() -> impl IntoResponse {
     (StatusCode::OK, "OK")
