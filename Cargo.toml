@@ -14,3 +14,4 @@ serde  	= { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 sqlx   	= { version = "0.8", features = ["postgres", "runtime-tokio-rustls", "chrono"] }
 tokio  	= { version = "1.0", features = ["full"] }
+urlencoding = "2.1.3"
