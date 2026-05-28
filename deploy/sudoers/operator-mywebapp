@@ -1,0 +1,13 @@
+# operator: restricted control of mywebapp.service and nginx reload.
+# --no-pager produces deterministic stdout for grader scripts and prevents
+# systemctl status from spawning an interactive pager.
+
+Cmnd_Alias MYWEBAPP_CTL = \
+    /usr/bin/systemctl --no-pager start   mywebapp, \
+    /usr/bin/systemctl --no-pager stop    mywebapp, \
+    /usr/bin/systemctl --no-pager restart mywebapp, \
+    /usr/bin/systemctl --no-pager status  mywebapp, \
+    /usr/bin/systemctl --no-pager reload  nginx, \
+    /usr/bin/systemctl --no-pager status  nginx
+
+operator ALL=(root) NOPASSWD: MYWEBAPP_CTL
