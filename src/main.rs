@@ -4,6 +4,7 @@ pub mod repository;
 pub mod views;
 
 use axum::routing::{Router, get};
+use clap::Parser;
 use figment::{
     Figment,
     providers::{Format, Yaml},
@@ -30,6 +31,13 @@ struct AppConfig {
     server: ServerConfig,
 }
 
+#[derive(Parser)]
+#[command(version, about)]
+struct Cli {
+    #[arg(long)]
+    print_db_url: bool,
+}
+
 fn load_config() -> Result<AppConfig, figment::Error> {
     let config_path =
         std::env::var("MYWEBAPP_CONFIG").unwrap_or_else(|_| "/etc/mywebapp/config.yml".to_string());
@@ -50,6 +58,8 @@ fn build_db_url(db: &DatabaseConfig) -> String {
 
 #[tokio::main]
 async fn main() {
+    let cli = Cli::parse();
+
     let config = match load_config() {
         Ok(c) => c,
         Err(e) => {
@@ -59,6 +69,11 @@ async fn main() {
     };
 
     let db_url = build_db_url(&config.database);
+
+    if cli.print_db_url {
+        print!("{}", db_url);
+        return;
+    }
 
     let pool = match sqlx::postgres::PgPoolOptions::new()
         .max_connections(5)
