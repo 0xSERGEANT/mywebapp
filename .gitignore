@@ -8,3 +8,7 @@ target/
 # IDE
 .idea/
 .vscode/
+
+# Deploy config (contains secrets after sed substitution)
+deploy/config/config.yml
+!deploy/config/config.yml.example

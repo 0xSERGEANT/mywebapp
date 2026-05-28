@@ -1,0 +1,10 @@
+database:
+  host: "127.0.0.1"
+  port: ${DB_PORT}
+  user: "${DB_USER}"
+  password: "${DB_PASS}"
+  database: "${DB_NAME}"
+
+server:
+  host: "${APP_HOST}"
+  port: ${APP_PORT}
