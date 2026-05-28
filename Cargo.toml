@@ -1,0 +1,7 @@
+[package]
+name = "mywebapp"
+version = "0.0.0"
+edition = "2024"
+repository = "https://github.com/0xSERGEANT/mywebapp"
+authors = ["0xSERGEANT", "dirigeants"]
+license = "WTFPL"

@@ -1,0 +1,10 @@
+# Cargo build artifacts
+debug/
+target/
+**/*.rs.bk
+*.pdb
+**/mutants.out*/
+
+# IDE
+.idea/
+.vscode/
