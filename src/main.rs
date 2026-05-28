@@ -7,7 +7,7 @@ use axum::routing::{Router, get};
 use clap::Parser;
 use figment::{
     Figment,
-    providers::{Format, Yaml},
+    providers::{Env, Format, Yaml},
 };
 
 #[derive(serde::Deserialize, Debug)]
@@ -42,7 +42,10 @@ fn load_config() -> Result<AppConfig, figment::Error> {
     let config_path =
         std::env::var("MYWEBAPP_CONFIG").unwrap_or_else(|_| "/etc/mywebapp/config.yml".to_string());
 
-    Figment::new().merge(Yaml::file(config_path)).extract()
+    Figment::new()
+        .merge(Yaml::file(config_path))
+        .merge(Env::prefixed("MYWEBAPP_").split("_"))
+        .extract()
 }
 
 fn build_db_url(db: &DatabaseConfig) -> String {
