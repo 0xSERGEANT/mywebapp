@@ -1,0 +1,44 @@
+# Build artifacts
+target/
+debug/
+
+# Rust backup files
+**/*.rs.bk
+
+# IDE
+.idea/
+.vscode/
+
+# Vagrant
+.vagrant/
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.dev.example
+!.env.prod.example
+
+# Logs
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Deploy scripts
+deploy/install.sh
+deploy/lib/
+deploy/systemd/
+deploy/sudoers/
+deploy/nginx/mywebapp.conf
+
+# Vagrant
+Vagrantfile
+
+# Docs / misc
+*.md
