@@ -15,3 +15,11 @@ deploy/config/config.yml
 
 # Vagrant
 .vagrant/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Temporary deploy key files
+*.tmp
