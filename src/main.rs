@@ -38,7 +38,7 @@ struct Cli {
     print_db_url: bool,
 }
 
-fn load_config() -> Result<AppConfig, figment::Error> {
+fn load_config() -> Result<AppConfig, Box<figment::Error>> {
     let config_path =
         std::env::var("MYWEBAPP_CONFIG").unwrap_or_else(|_| "/etc/mywebapp/config.yml".to_string());
 
@@ -46,6 +46,7 @@ fn load_config() -> Result<AppConfig, figment::Error> {
         .merge(Yaml::file(config_path))
         .merge(Env::prefixed("MYWEBAPP_").split("_"))
         .extract()
+        .map_err(Box::new)
 }
 
 fn build_db_url(db: &DatabaseConfig) -> String {
