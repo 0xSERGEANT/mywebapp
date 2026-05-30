@@ -105,6 +105,52 @@ PASS  dotfile 404                (404)
 
 ---
 
+## Docker Compose Deployment
+
+The stack can be deployed via Docker Compose using containerized services connected through a custom bridge network (`mywebapp_net`):
+- `db`: PostgreSQL 17 database running on Alpine Linux.
+- `app`: Containerized Rust/Axum backend server.
+- `nginx`: Alpine-based reverse proxy configuration.
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Deployment Strategy
+
+Generate your configuration from the provided blueprint:
+
+```bash
+cp .env.example .env
+```
+
+Launch the stack in the background:
+
+```bash
+docker compose up -d --build
+```
+
+### Management Protocols
+
+Check container status:
+```bash
+docker compose ps
+```
+
+Trace logging indicators directly to the console buffer:
+```bash
+docker compose logs -f
+```
+
+Tear down active structural layers:
+```bash
+docker compose down
+```
+*(Append `-v` to discard internal volume state mappings permanently).*
+
+---
+
 ## Configuration
 
 The application reads `/etc/mywebapp/config.yml` (path overridable via `MYWEBAPP_CONFIG` env var):
@@ -226,9 +272,7 @@ All commands assume `vagrant up` has completed and the host port is `8080`.
 curl -H "Accept: text/html" http://localhost:8080/
 
 # Create an item
-curl -X POST http://localhost:8080/items \
-     -H "Content-Type: application/json" \
-     -d '{"name": "Cisco Router", "quantity": 10}'
+curl -X POST http://localhost:8080/items      -H "Content-Type: application/json"      -d '{"name": "Cisco Router", "quantity": 10}'
 
 # List items — JSON (default)
 curl http://localhost:8080/items
