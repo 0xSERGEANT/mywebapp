@@ -3,7 +3,9 @@ run-name: >-
   ${{ startsWith(github.ref, 'refs/tags/')
       && format('release [{0}]', github.ref_name)
       || format('ci-cd [{0}] — {1}', github.ref_name,
-                github.event.head_commit.message || 'manual') }}
+                github.event.head_commit.message
+                || github.event.pull_request.title
+                || 'manual') }}
 
 on:
   push:
