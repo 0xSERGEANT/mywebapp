@@ -23,3 +23,6 @@ deploy/config/config.yml
 
 # Temporary deploy key files
 *.tmp
+
+# Test coverage reports
+coverage/
