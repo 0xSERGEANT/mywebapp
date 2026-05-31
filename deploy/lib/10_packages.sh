@@ -46,6 +46,7 @@ if command -v cargo >/dev/null 2>&1; then
 else
     echo "rust: installing stable toolchain via rustup..."
     curl --proto '=https' --tlsv1.2 -sSf "$RUSTUP_URL" | sh -s -- "${RUSTUP_ARGS[@]}"
+    # shellcheck disable=SC1091
     source "$CARGO_HOME/env"
 fi
 

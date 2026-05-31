@@ -5,6 +5,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 if [[ -f /etc/os-release ]]; then
+    # shellcheck disable=SC1091
     source /etc/os-release
     distro="${NAME:-unknown}"
     release="${VERSION_ID:-unknown}"

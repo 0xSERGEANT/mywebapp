@@ -4,6 +4,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# shellcheck disable=SC1091
 [[ -f "$CARGO_HOME/env" ]] && source "$CARGO_HOME/env"
 
 echo "app_build: building release binary..."
