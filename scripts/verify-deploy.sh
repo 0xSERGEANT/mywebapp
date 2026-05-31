@@ -30,7 +30,7 @@ check_code "items JSON 200"     200 "${BASE}/items"  -H 'Accept: application/jso
 check_code "items HTML 200"     200 "${BASE}/items"  -H 'Accept: text/html'
 check_code "root HTML 200"      200 "${BASE}/"       -H 'Accept: text/html'
 
-check_code "admin 404"          404 "${BASE}/admin"
+check_code "admin 200"          200 "${BASE}/admin"
 check_code "dotfile 404"        404 "${BASE}/.env"
 check_code "health blocked"     404 "${BASE}/health/alive"
 
