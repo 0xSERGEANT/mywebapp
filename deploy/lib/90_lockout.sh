@@ -11,7 +11,8 @@ install -m 0644 -o student -g student /dev/null "$GRADEBOOK"
 echo "$STUDENT_N" > "$GRADEBOOK"
 echo "lockout: gradebook written → ${STUDENT_N}"
 
-readonly sshd_cfg="$(sshd -T 2>/dev/null || true)"
+sshd_cfg="$(sshd -T 2>/dev/null || true)"
+readonly sshd_cfg
 
 if [[ ! "$sshd_cfg" =~ (^|$'\n')passwordauthentication[[:space:]]+yes($|$'\n') ]]; then
     echo "lockout: sshd passwordauthentication is not 'yes'; aborting" >&2

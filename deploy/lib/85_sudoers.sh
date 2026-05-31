@@ -7,7 +7,8 @@ IFS=$'\n\t'
 readonly SRC_FILE="${REPO_DIR}/deploy/sudoers/operator-mywebapp"
 readonly DST_FILE="/etc/sudoers.d/operator-mywebapp"
 
-readonly tmp="$(mktemp)"
+tmp="$(mktemp)"
+readonly tmp
 trap 'rm -f "$tmp"' EXIT
 
 cp "$SRC_FILE" "$tmp"

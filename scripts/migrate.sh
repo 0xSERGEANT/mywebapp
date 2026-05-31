@@ -6,7 +6,8 @@ IFS=$'\n\t'
 
 readonly MIGRATIONS_DIR="${MIGRATIONS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/migrations}"
 readonly BIN_PATH="${BIN_PATH:-$(dirname "${BASH_SOURCE[0]}")/../mywebapp}"
-readonly DB_URL="$("$BIN_PATH" --print-db-url)"
+DB_URL="$("$BIN_PATH" --print-db-url)"
+readonly DB_URL
 
 PSQL_ARGS=(
     psql 
@@ -18,8 +19,9 @@ PSQL_ARGS=(
 
 "${PSQL_ARGS[@]}" --file="$MIGRATIONS_DIR/schema_version.sql"
 
-readonly current_version=$("${PSQL_ARGS[@]}" --tuples-only --no-align \
+current_version=$("${PSQL_ARGS[@]}" --tuples-only --no-align \
     --command='SELECT COALESCE(MAX(version), 0) FROM schema_version;')
+readonly current_version
 
 shopt -s nullglob
 migrations=("$MIGRATIONS_DIR"/[0-9][0-9][0-9]_*.sql)

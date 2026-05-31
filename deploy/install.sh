@@ -8,7 +8,8 @@ IFS=$'\n\t'
 (( EUID == 0 )) || { echo "install.sh: must run as root" >&2; exit 1; }
 
 readonly DEFAULT_USER="${DEFAULT_USER:-}"
-readonly HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly HERE
 
 export REPO_DIR="${HERE%/*}"
 export APP_HOST="127.0.0.1"
@@ -34,6 +35,7 @@ readonly steps=("$HERE"/lib/[0-9][0-9]_*.sh)
 
 for step in "${steps[@]}"; do
     echo "---- running ${step##*/} ----"
+    # shellcheck disable=SC1090
     source "$step"
 done
 

@@ -20,8 +20,10 @@ export DB_PASS
 systemctl enable --now postgresql
 
 PSQL=(sudo -u postgres psql --quiet --no-psqlrc --tuples-only --no-align)
-readonly pg_conf=$("${PSQL[@]}" -c 'SHOW config_file;')
-readonly hba_conf=$("${PSQL[@]}" -c 'SHOW hba_file;')
+pg_conf=$("${PSQL[@]}" -c 'SHOW config_file;')
+readonly pg_conf 
+hba_conf=$("${PSQL[@]}" -c 'SHOW hba_file;')
+readonly hba_conf 
 
 pg_restart_needed=0
 
