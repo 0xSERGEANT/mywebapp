@@ -105,3 +105,107 @@ pub async fn create_item(
         Ok((StatusCode::CREATED, Json(item)).into_response())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::response::IntoResponse;
+
+    #[test]
+    fn app_error_not_found_returns_404() {
+        let response = AppError::NotFound.into_response();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn app_error_database_returns_500() {
+        let response = AppError::Database(sqlx::Error::RowNotFound).into_response();
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[test]
+    fn prefers_html_with_text_html() {
+        let mut h = HeaderMap::new();
+        h.insert(ACCEPT, "text/html".parse().unwrap());
+        assert!(prefers_html(&h));
+    }
+
+    #[test]
+    fn no_html_with_json_accept() {
+        let mut h = HeaderMap::new();
+        h.insert(ACCEPT, "application/json".parse().unwrap());
+        assert!(!prefers_html(&h));
+    }
+
+    #[test]
+    fn no_html_with_empty_headers() {
+        assert!(!prefers_html(&HeaderMap::new()));
+    }
+
+    #[test]
+    fn no_html_with_wildcard() {
+        let mut h = HeaderMap::new();
+        h.insert(ACCEPT, "*/*".parse().unwrap());
+        assert!(!prefers_html(&h));
+    }
+
+    #[tokio::test]
+    async fn health_alive_returns_200() {
+        let response = health_alive().await.into_response();
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn root_not_acceptable_without_html() {
+        let response = root(HeaderMap::new()).await.into_response();
+        assert_eq!(response.status(), StatusCode::NOT_ACCEPTABLE);
+    }
+
+    #[tokio::test]
+    async fn root_ok_with_html_accept() {
+        let mut h = HeaderMap::new();
+        h.insert(ACCEPT, "text/html".parse().unwrap());
+        let response = root(h).await.into_response();
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn health_ready_database_error() {
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .connect_lazy("postgres://postgres:password@localhost:5432/nonexistent")
+            .unwrap();
+        let response = health_ready(State(pool)).await;
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[tokio::test]
+    async fn get_items_database_error() {
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .connect_lazy("postgres://postgres:password@localhost:5432/nonexistent")
+            .unwrap();
+        let result = get_items(State(pool), HeaderMap::new()).await;
+        assert!(matches!(result, Err(AppError::Database(_))));
+    }
+
+    #[tokio::test]
+    async fn get_item_database_error() {
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .connect_lazy("postgres://postgres:password@localhost:5432/nonexistent")
+            .unwrap();
+        let result = get_item(State(pool), Path(1), HeaderMap::new()).await;
+        assert!(matches!(result, Err(AppError::Database(_))));
+    }
+
+    #[tokio::test]
+    async fn create_item_database_error() {
+        let pool = sqlx::postgres::PgPoolOptions::new()
+            .connect_lazy("postgres://postgres:password@localhost:5432/nonexistent")
+            .unwrap();
+        let payload = Json(models::CreateItemPayload {
+            name: "test".to_string(),
+            quantity: 1,
+        });
+        let result = create_item(State(pool), HeaderMap::new(), payload).await;
+        assert!(matches!(result, Err(AppError::Database(_))));
+    }
+}
