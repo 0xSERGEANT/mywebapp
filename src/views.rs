@@ -67,3 +67,107 @@ pub fn item_created(item: &models::Item) -> String {
         item.id
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{Item, ItemListEntry};
+    use chrono::Utc;
+
+    fn sample_item() -> Item {
+        Item {
+            id: 1,
+            name: "bolt".to_string(),
+            quantity: 42,
+            created_at: Utc::now(),
+        }
+    }
+
+    #[test]
+    fn escape_lt_gt() {
+        assert_eq!(escape_html("<b>"), "&lt;b&gt;");
+    }
+
+    #[test]
+    fn escape_amp() {
+        assert_eq!(escape_html("a&b"), "a&amp;b");
+    }
+
+    #[test]
+    fn escape_quotes() {
+        assert_eq!(escape_html("\"x\""), "&quot;x&quot;");
+    }
+
+    #[test]
+    fn escape_single_quote() {
+        assert_eq!(escape_html("it's"), "it&#x27;s");
+    }
+
+    #[test]
+    fn root_page_has_items_link() {
+        assert!(root_page().contains("/items"));
+    }
+
+    #[test]
+    fn root_page_has_health_links() {
+        let p = root_page();
+        assert!(p.contains("/health/alive"));
+        assert!(p.contains("/health/ready"));
+    }
+
+    #[test]
+    fn items_list_empty_renders_table() {
+        let html = items_list(&[]);
+        assert!(html.contains("<table"));
+        assert!(html.contains("Inventory"));
+    }
+
+    #[test]
+    fn items_list_shows_item() {
+        let html = items_list(&[ItemListEntry {
+            id: 1,
+            name: "bolt".to_string(),
+        }]);
+        assert!(html.contains("bolt"));
+        assert!(html.contains("/items/1"));
+    }
+
+    #[test]
+    fn items_list_escapes_xss() {
+        let xss = ItemListEntry {
+            id: 2,
+            name: "<script>alert(1)</script>".to_string(),
+        };
+        let html = items_list(&[xss]);
+        assert!(!html.contains("<script>"));
+        assert!(html.contains("&lt;script&gt;"));
+    }
+
+    #[test]
+    fn item_detail_shows_all_fields() {
+        let html = item_detail(&sample_item());
+        assert!(html.contains("bolt"));
+        assert!(html.contains("42"));
+    }
+
+    #[test]
+    fn item_detail_escapes_name() {
+        let item = Item {
+            id: 1,
+            name: "<b>x</b>".to_string(),
+            quantity: 1,
+            created_at: Utc::now(),
+        };
+
+        let html = item_detail(&item);
+        assert!(!html.contains("<b>x</b>"));
+        assert!(html.contains("&lt;b&gt;x&lt;/b&gt;"));
+    }
+
+    #[test]
+    fn item_created_shows_name() {
+        let html = item_created(&sample_item());
+        assert!(html.contains("bolt"));
+        assert!(html.contains("Item Created"));
+    }
+}
