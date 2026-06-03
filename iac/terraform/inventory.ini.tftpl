@@ -1,0 +1,10 @@
+[worker]
+mywebapp-worker ansible_host=${worker_ansible_host} private_ip=${worker_private_ip}
+
+[db]
+mywebapp-db ansible_host=${db_ansible_host} private_ip=${db_private_ip}
+
+[all:vars]
+ansible_user=ansible
+ansible_ssh_private_key_file=~/.ssh/id_ed25519
+ansible_python_interpreter=/usr/bin/python3

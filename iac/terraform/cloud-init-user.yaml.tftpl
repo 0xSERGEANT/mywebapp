@@ -1,0 +1,21 @@
+#cloud-config
+hostname: ${hostname}
+fqdn: ${hostname}.local
+prefer_fqdn_over_hostname: false
+
+users:
+  - name: ansible
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${ansible_ssh_public_key}
+
+package_update: true
+packages:
+  - python3
+  - python3-apt
+
+runcmd:
+  - systemctl enable --now ssh
+  - touch /var/lib/cloud/instance/cloud-init-done

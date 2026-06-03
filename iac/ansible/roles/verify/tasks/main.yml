@@ -1,0 +1,46 @@
+---
+# Internal checks — run on worker VM, bypass nginx
+- name: Wait for app to become healthy (direct port)
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ app_port }}/health/alive"
+    status_code: 200
+  register: _alive
+  until: _alive.status == 200
+  retries: 12
+  delay: 5
+
+- name: Verify DB connectivity via /health/ready (direct port)
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ app_port }}/health/ready"
+    status_code: 200
+
+# External checks — run from Ansible controller through nginx on port 80
+- name: Root endpoint returns HTML 200 via nginx
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}/"
+    status_code: 200
+    headers:
+      Accept: "text/html"
+  delegate_to: localhost
+
+- name: /items endpoint returns JSON via nginx
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}/items"
+    status_code: 200
+    headers:
+      Accept: "application/json"
+  register: _items
+  failed_when: _items.status != 200 or _items.json is not defined
+  delegate_to: localhost
+
+- name: /admin returns 404 (not in allow-list)
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}/admin"
+    status_code: 404
+  delegate_to: localhost
+
+- name: /health/alive returns 404 externally (blocked by nginx)
+  ansible.builtin.uri:
+    url: "http://{{ ansible_host }}/health/alive"
+    status_code: 404
+  delegate_to: localhost

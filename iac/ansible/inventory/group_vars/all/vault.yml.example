@@ -1,0 +1,7 @@
+---
+# Copy to vault.yml, fill in real values, then encrypt:
+#   ansible-vault encrypt inventory/group_vars/vault.yml
+
+vault_db_password: "change_me_strong_db_password"
+vault_teacher_password: "12345678"
+vault_operator_password: "12345678"

@@ -1,0 +1,6 @@
+---
+- ansible.builtin.import_tasks: users.yml
+- ansible.builtin.import_tasks: docker.yml
+- ansible.builtin.import_tasks: app.yml
+- ansible.builtin.import_tasks: nginx.yml
+- ansible.builtin.import_tasks: sudoers.yml

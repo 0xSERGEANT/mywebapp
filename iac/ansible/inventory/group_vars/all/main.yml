@@ -1,0 +1,12 @@
+---
+# Container image pushed by the CI/CD pipeline.
+# Use :stable after tagging a release (git tag -a vX.Y.Z -m '...').
+app_image: "ghcr.io/0xsergeant/mywebapp:latest"
+app_port: 5200
+
+db_name: mywebapp
+db_user: mywebapp
+db_port: 5432
+
+# Written to /home/student/gradebook on every VM
+gradebook_variant: "11"

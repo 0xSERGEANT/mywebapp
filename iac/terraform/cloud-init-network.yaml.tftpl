@@ -1,0 +1,23 @@
+version: 2
+ethernets:
+  mgmt0:
+    match:
+      macaddress: "${mgmt_mac}"
+    set-name: mgmt0
+    dhcp4: false
+    addresses:
+      - ${mgmt_ip}/${mgmt_prefix}
+    routes:
+      - to: default
+        via: ${gateway}
+    nameservers:
+      addresses:
+        - 8.8.8.8
+        - 1.1.1.1
+  priv0:
+    match:
+      macaddress: "${private_mac}"
+    set-name: priv0
+    dhcp4: false
+    addresses:
+      - ${private_ip}/${private_prefix}

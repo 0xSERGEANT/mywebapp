@@ -1,0 +1,9 @@
+# pg_hba.conf — Ansible-managed (Lab 4)
+# TYPE  DATABASE        USER            ADDRESS                         METHOD
+
+# Local maintenance (postgres OS user only)
+local   all             postgres                                        peer
+local   all             all                                             reject
+
+# Worker VM — application connections via private network only
+host    {{ db_name }}   {{ db_user }}   {{ hostvars[groups['worker'][0]].private_ip }}/32   scram-sha-256

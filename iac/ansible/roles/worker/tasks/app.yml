@@ -1,0 +1,51 @@
+---
+- name: Create /etc/mywebapp config directory
+  ansible.builtin.file:
+    path: /etc/mywebapp
+    state: directory
+    owner: root
+    group: app
+    mode: "0750"
+
+- name: Create /opt/mywebapp working directory
+  ansible.builtin.file:
+    path: /opt/mywebapp
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy application YAML config
+  ansible.builtin.template:
+    src: config.yml.j2
+    dest: /etc/mywebapp/config.yml
+    owner: root
+    group: app
+    mode: "0640"
+  notify: Restart mywebapp
+
+- name: Deploy Docker Compose manifest
+  ansible.builtin.template:
+    src: compose.yaml.j2
+    dest: /opt/mywebapp/compose.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart mywebapp
+
+- name: Deploy systemd unit
+  ansible.builtin.template:
+    src: mywebapp.service.j2
+    dest: /etc/systemd/system/mywebapp.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd daemon
+    - Restart mywebapp
+
+- name: Enable mywebapp service
+  ansible.builtin.systemd:
+    name: mywebapp
+    enabled: true
+    daemon_reload: true

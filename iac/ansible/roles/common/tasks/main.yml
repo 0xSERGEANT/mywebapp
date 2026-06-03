@@ -1,0 +1,46 @@
+---
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - python3-psycopg2
+      - jq
+      - curl
+      - ca-certificates
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create student user
+  ansible.builtin.user:
+    name: student
+    shell: /bin/bash
+    create_home: true
+
+- name: Write gradebook file
+  ansible.builtin.copy:
+    content: "{{ gradebook_variant }}\n"
+    dest: /home/student/gradebook
+    owner: student
+    group: student
+    mode: "0644"
+
+- name: Create teacher user
+  ansible.builtin.user:
+    name: teacher
+    shell: /bin/bash
+    create_home: true
+    groups: sudo
+    append: true
+    password: "{{ vault_teacher_password | password_hash('sha512') }}"
+    update_password: on_create
+
+- name: Enable SSH password auth for teacher only
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/50-teacher-pwauth.conf
+    content: |
+      Match User teacher
+          PasswordAuthentication yes
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload sshd

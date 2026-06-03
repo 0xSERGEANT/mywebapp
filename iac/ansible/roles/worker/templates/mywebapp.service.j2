@@ -1,0 +1,18 @@
+[Unit]
+Description=mywebapp compose stack
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/mywebapp
+TimeoutStartSec=180
+
+ExecStartPre=-/usr/bin/docker compose -f /opt/mywebapp/compose.yaml pull --quiet
+ExecStart=/usr/bin/docker compose -f /opt/mywebapp/compose.yaml up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -f /opt/mywebapp/compose.yaml down
+
+[Install]
+WantedBy=multi-user.target

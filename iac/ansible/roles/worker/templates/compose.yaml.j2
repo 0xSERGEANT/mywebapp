@@ -1,0 +1,22 @@
+---
+# All config passed via env vars so the container's app user (uid 1001)
+# never needs to read a host-owned file.  Figment merges these under the
+# MYWEBAPP_ prefix with split("_"), e.g. MYWEBAPP_DATABASE_HOST → database.host.
+services:
+  app:
+    image: {{ app_image }}
+    network_mode: host
+    environment:
+      MYWEBAPP_DATABASE_HOST: "{{ hostvars[groups['db'][0]].private_ip }}"
+      MYWEBAPP_DATABASE_PORT: "{{ db_port }}"
+      MYWEBAPP_DATABASE_USER: "{{ db_user }}"
+      MYWEBAPP_DATABASE_PASSWORD: "{{ vault_db_password }}"
+      MYWEBAPP_DATABASE_DATABASE: "{{ db_name }}"
+      MYWEBAPP_SERVER_HOST: "0.0.0.0"
+      MYWEBAPP_SERVER_PORT: "{{ app_port }}"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:{{ app_port }}/health/alive"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped

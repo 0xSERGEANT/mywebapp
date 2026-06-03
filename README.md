@@ -293,6 +293,92 @@ vagrant ssh -c "curl http://127.0.0.1:5200/health/ready"
 
 ---
 
+## Infrastructure as Code (Terraform + Ansible / libvirt/KVM)
+
+Two-tier deployment on local KVM virtual machines.
+
+### Architecture
+
+```
+  WSL2 host (192.168.100.1)
+       │
+       │  libvirt NAT (192.168.100.0/24) — management + internet
+       ├──────────────────────────────────────────────┐
+       │                                              │
+  ┌────┴────────────────────┐         ┌──────────────┴──────────────┐
+  │  worker  (192.168.100.10)│         │  db  (192.168.100.11)        │
+  │                          │         │                              │
+  │  nginx :80               │         │  PostgreSQL :5432            │
+  │    ↓ allow-list proxy    │         │    listen: 10.0.1.11 only    │
+  │  app container :5200     │         │    auth: scram-sha-256       │
+  │    ↓ env-vars config     │         │    hba: worker private IP    │
+  │                          │         └──────────────────────────────┘
+  └─────────────┬────────────┘                      │
+                └───────────────────────────────────┘
+                   libvirt isolated (10.0.1.0/24)
+                   worker: 10.0.1.10 ↔ db: 10.0.1.11
+```
+
+**Users on every VM:** `ansible` (SSH key, full sudo), `student` (local only), `teacher` (sudo + SSH password), `operator` (6 restricted sudo cmds, worker only).
+
+**Operator commands:** `systemctl start/stop/restart/status mywebapp`, `systemctl reload/status nginx`
+
+### Prerequisites
+
+- KVM + libvirt + mkisofs
+- Terraform 1.15.x
+- Ansible 2.21+
+
+### Quick Start
+
+```bash
+# 1. Provision VMs
+cd iac/terraform
+cp example.tfvars terraform.tfvars        # fill in ssh_public_key
+terraform init && terraform apply
+
+# 2. Wait for cloud-init (~60 s)
+ssh ansible@192.168.100.10 cloud-init status --wait
+ssh ansible@192.168.100.11 cloud-init status --wait
+
+# 3. Prepare Ansible vault
+cd ../ansible
+ansible-galaxy collection install -r requirements.yml
+cp inventory/group_vars/all/vault.yml.example \
+   inventory/group_vars/all/vault.yml
+nano inventory/group_vars/all/vault.yml   # set real passwords
+ansible-vault encrypt inventory/group_vars/all/vault.yml
+
+# 4. Deploy (WSL2: set ANSIBLE_CONFIG to bypass world-writable warning)
+ANSIBLE_CONFIG="$(pwd)/ansible.cfg" \
+  ansible-playbook -i inventory/hosts.ini site.yml --ask-vault-pass
+
+# 5. Smoke test
+curl -H 'Accept: text/html' http://192.168.100.10/
+curl -H 'Accept: application/json' http://192.168.100.10/items
+```
+
+Run the playbook a second time to confirm idempotency (zero changes).
+
+### Teardown
+
+```bash
+cd iac/terraform && terraform destroy
+```
+
+### Tool versions
+
+| Tool             | Version   |
+|------------------|-----------|
+| Terraform        | 1.15.5    |
+| libvirt provider | 0.8.1     |
+| ansible-core     | ≥ 2.21    |
+| Ubuntu (guest)   | 24.04 LTS |
+| PostgreSQL       | 16        |
+| Docker Compose   | v2 plugin |
+
+---
+
 ## Teacher Grading Instructions
 
 SSH into the VM as `teacher` (default password `12345678`; you will be forced to change it):

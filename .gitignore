@@ -26,3 +26,15 @@ deploy/config/config.yml
 
 # Test coverage reports
 coverage/
+
+# Terraform
+iac/terraform/.terraform/
+iac/terraform/.terraform.lock.hcl
+iac/terraform/*.tfstate
+iac/terraform/*.tfstate.*
+iac/terraform/*.tfstate.backup
+iac/terraform/terraform.tfvars
+
+# Ansible — generated inventory & encrypted vault
+iac/ansible/inventory/hosts.ini
+iac/ansible/inventory/group_vars/all/vault.yml

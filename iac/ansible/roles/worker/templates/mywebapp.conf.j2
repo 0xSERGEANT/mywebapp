@@ -1,0 +1,40 @@
+upstream mywebapp {
+    server 127.0.0.1:{{ app_port }};
+    keepalive 16;
+}
+
+server {
+    listen 0.0.0.0:80 default_server;
+    server_name _;
+
+    access_log /var/log/nginx/mywebapp.access.log combined;
+    error_log  /var/log/nginx/mywebapp.error.log warn;
+
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # Block health endpoints externally — internal checks use direct port
+    location ^~ /health {
+        return 404;
+    }
+
+    # Allow-list: only these paths are proxied
+    location = / {
+        proxy_pass http://mywebapp;
+    }
+
+    location = /items {
+        proxy_pass http://mywebapp;
+    }
+
+    location ~ ^/items/[0-9]+$ {
+        proxy_pass http://mywebapp;
+    }
+
+    # Default-deny: everything else returns 404
+    location / {
+        return 404;
+    }
+}

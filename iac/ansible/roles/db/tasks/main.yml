@@ -1,0 +1,72 @@
+---
+- name: Install PostgreSQL and Python adapter
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Detect installed PostgreSQL major version
+  ansible.builtin.shell:
+    cmd: "pg_lsclusters --no-header | awk '{print $1; exit}'"
+  register: _pg_ver
+  changed_when: false
+
+- name: Set pg_version fact
+  ansible.builtin.set_fact:
+    pg_version: "{{ _pg_ver.stdout | trim }}"
+
+- name: Configure listen_addresses to private IP
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ pg_version }}/main/postgresql.conf"
+    regexp: "^#?listen_addresses"
+    line: "listen_addresses = '{{ private_ip }}'"
+    state: present
+  notify: Restart postgresql
+
+- name: Enforce SCRAM-SHA-256 password encryption
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ pg_version }}/main/postgresql.conf"
+    regexp: "^#?password_encryption"
+    line: "password_encryption = scram-sha-256"
+    state: present
+  notify: Restart postgresql
+
+- name: Deploy pg_hba.conf (restrict access to worker private IP)
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "/etc/postgresql/{{ pg_version }}/main/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: Restart postgresql
+
+- name: Flush handlers — PostgreSQL must be running before creating objects
+  ansible.builtin.meta: flush_handlers
+
+- name: Create application database role
+  community.postgresql.postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ vault_db_password }}"
+    state: present
+  become_user: postgres
+
+- name: Create application database
+  community.postgresql.postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+    state: present
+  become_user: postgres
+
+- name: Grant all privileges on public schema
+  community.postgresql.postgresql_privs:
+    db: "{{ db_name }}"
+    privs: ALL
+    type: schema
+    objs: public
+    role: "{{ db_user }}"
+    state: present
+  become_user: postgres
